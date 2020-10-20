@@ -1,0 +1,6 @@
+file:
+  instreamPath: "C:/VishalM/temp/input"
+  outstreamPath: "C:/VishalM/temp/output"
+  archivePath: "C:/VishalM/temp/archive"
+  inProcessPath: "C:/VishalM/temp/inprocess"
+  processedPath: "C:/VishalM/temp/processed"

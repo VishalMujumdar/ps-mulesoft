@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="ps-file-processing" doc:id="50d06b92-f263-4acd-927f-0bdc221d4958" >
+		<file:listener doc:name="Read File from /input" doc:id="95d0ca1a-c18a-4cbe-a0eb-73db1209a22e" config-ref="file-config" directory="${file.instreamPath}" recursive="false">
+			<scheduling-strategy >
+				<fixed-frequency frequency="10" timeUnit="SECONDS"/>
+			</scheduling-strategy>
+		</file:listener>
+		<ee:transform doc:name="Target FIle Name" doc:id="3cf21d68-9090-413e-907c-9e31d1be7ba7" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="orignal-file-feed" ><![CDATA[%dw 2.0
+output application/json
+---
+( attributes.path as String )]]></ee:set-variable>
+				<ee:set-variable variableName="inProcess-file-feed" ><![CDATA[%dw 2.0
+output application/json
+---
+( p('file.inProcessPath') as String ) ++ ( '/' as String ) ++  ( attributes.fileName as String )]]></ee:set-variable>
+				<ee:set-variable variableName="output-file-feed" ><![CDATA[%dw 2.0
+import * from dw::core::Strings
+output application/json
+---
+( p('file.outstreamPath') as String ) ++ ( '/' as String ) ++  (correlationId as String) ++ '_' ++ substringBefore( attributes.fileName ,".csv") ++ ".json"]]></ee:set-variable>
+				<ee:set-variable variableName="archive-file-feed" ><![CDATA[%dw 2.0
+import * from dw::core::Strings
+output application/json
+---
+( p('file.archivePath') as String ) ++ ( '/' as String ) ++  (correlationId as String )]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<file:copy doc:name="Copy to /inProcess" doc:id="40ce18b6-9fca-4202-a6b3-7bc45174deca" config-ref="file-config" sourcePath='#[vars."orignal-file-feed"]' targetPath='${file.inProcessPath}'/>
+		<ee:transform doc:name="CSV to JSON" doc:id="58475c78-f3c3-460c-b01f-8e1e646684fc" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map (payload , indexOfPayload) -> {
+	name : payload.Name,
+	address:{
+		street: payload.BillingStreet ,
+		city: payload.BillingCity,
+		state: payload.BillingState ,
+		country: payload.BillingCountry,
+		pin: payload.BillingPostalCode		
+		
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<file:write doc:name="JSON File to /output" doc:id="ac4ee2c5-210a-41cb-8f38-bcc28daa9c07" config-ref="file-config" path='#[vars."output-file-feed"]'/>
+		<logger level="INFO" doc:name="Logger" doc:id="6ee7545c-a761-4a5e-a7c0-1bc673e1186b" message="#[typeOf(payload)]"/>
+		<file:create-directory doc:name="Create Dir /archive" doc:id="3cdb646a-8a41-4d8f-93cb-65590ed16230" config-ref="file-config" directoryPath='#[vars."archive-file-feed"]'/>
+		<file:move doc:name="/input Dir to /archive Dir" doc:id="7497b7bd-f2df-4cb4-b9bd-40713282be1a" config-ref="file-config" sourcePath='#[vars."orignal-file-feed"]' targetPath='#[vars."archive-file-feed"]'/>
+		<file:rename doc:name="Rename File at /archive" doc:id="9150ea52-271a-48c0-b3fc-052a8eb1c5f6" config-ref="file-config" path="#[vars.&quot;archive-file-feed&quot; ++ '/' ++ attributes.fileName]" to="#[correlationId ++ attributes.fileName]"/>
+		<file:read doc:name=" JSON File from /output" doc:id="b3a630a6-f47b-40df-b5dc-f37c8998d7c6" config-ref="file-config" path='#[vars."output-file-feed"]'/>
+		<ee:transform doc:name="JSON to XML" doc:id="a1a88e76-2344-4956-905c-e303eb3b207f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+---
+{
+	accounts: {
+		(payload map ( payload01 , indexOfPayload01 ) -> {
+			account: {
+				name: payload01.name,
+				address: {
+					street: payload01.address.street,
+					city: payload01.address.city,
+					state: payload01.address.state,
+					country: payload01.address.country,
+					pin: payload01.address.pin as Number
+				}
+			}
+		})
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<file:write doc:name="Write XML to /processed" doc:id="45d544e5-4571-427e-a86d-500b756fc65f" config-ref="file-config" path="#[p('file.processedPath') ++ '/' ++ correlationId ++ '.xml']"/>
+		<logger level="INFO" doc:name="Logger" doc:id="e94b6774-88ed-4ce3-8d89-8038652a913c" />
+	</flow>
+</mule>

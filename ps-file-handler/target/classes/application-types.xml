@@ -1,0 +1,53 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="accounts_csv" format="csv">
+      <types:shape format="weave" example="examples/accounts.csv"><![CDATA[%dw 2.0
+
+type accounts_csv = Array<{|  BillingStreet: String,   BillingCity: String,   BillingCountry: String,   BillingState: String,   Name: String,   BillingPostalCode: String|}> {"isQuotedString": "false",
+"header": "true",
+"headerLineNumber": "0"}
+
+]]></types:shape>
+      <types:properties>
+        <types:property name="headerLineNumber" value="0"/>
+        <types:property name="header" value="true"/>
+        <types:property name="isQuotedString" value="false"/>
+      </types:properties>
+    </types:type>
+    <types:type name="accounts_json" format="json">
+      <types:shape format="weave" example="examples/accounts.json"><![CDATA[%dw 2.0
+
+type accounts_json = Array<{|  name: String,   address: {|    street: String,     city: String,     state: String,     country: String,     pin: String  |}|}> {"example": "[{\\\"name\\\":\\\"Dog Park Industries\\\",\\\"address\\\":{\\\"street\\\":\\\"111 Boulevard Hausmann\\\",\\\"city\\\":\\\"Paris\\\",\\\"state\\\":\\\"\\\",\\\"country\\\":\\\"France\\\",\\\"pin\\\":\\\"75008\\\"}},{\\\"name\\\":\\\"Iguana Park Industries\\\",\\\"address\\\":{\\\"street\\\":\\\"400 South St\\\",\\\"city\\\":\\\"San Francisco\\\",\\\"state\\\":\\\"CA\\\",\\\"country\\\":\\\"USA\\\",\\\"pin\\\":\\\"91156\\\"}},{\\\"name\\\":\\\"Cat Park Industries\\\",\\\"address\\\":{\\\"street\\\":\\\"777 North St\\\",\\\"city\\\":\\\"San Francisco\\\",\\\"state\\\":\\\"CA\\\",\\\"country\\\":\\\"USA\\\",\\\"pin\\\":\\\"91156\\\"}}]"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="accounts_xml" format="xml">
+      <types:example format="xml" element="accounts" location="examples/accounts.xml"/>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#3cf21d68-9090-413e-907c-9e31d1be7ba7"/>
+  <types:enrichment select="#58475c78-f3c3-460c-b01f-8e1e646684fc">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="accounts_csv"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#a1a88e76-2344-4956-905c-e303eb3b207f">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="accounts_json"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="accounts_xml"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>
