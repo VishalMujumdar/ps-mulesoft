@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Dog Park Industries",
+    "address": {
+      "street": "111 Boulevard Hausmann",
+      "city": "Paris",
+      "state": "",
+      "country": "France",
+      "pin": "75008"
+    }
+  },
+  {
+    "name": "Iguana Park Industries",
+    "address": {
+      "street": "400 South St",
+      "city": "San Francisco",
+      "state": "CA",
+      "country": "USA",
+      "pin": "91156"
+    }
+  },
+  {
+    "name": "Cat Park Industries",
+    "address": {
+      "street": "777 North St",
+      "city": "San Francisco",
+      "state": "CA",
+      "country": "USA",
+      "pin": "91156"
+    }
+  }
+]

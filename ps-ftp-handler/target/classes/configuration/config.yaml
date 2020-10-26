@@ -1,0 +1,6 @@
+ftp:
+  instreamPath: "/inbox/"
+  outstreamPath: "/outbox/"
+  archivePath: "/archive/"
+  inProcessPath: "/inprocess/"
+  processedPath: "/processed/"

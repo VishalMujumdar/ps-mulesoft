@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<accounts>
+	<account>
+		<name>Dog Park Industries</name>
+		<address>
+			<street>111 Boulevard Hausmann</street>
+			<city>Paris</city>
+			<state>LE</state>
+			<country>France</country>
+			<pin>75008</pin>
+		</address>
+	</account>
+	<account>
+		<name>Iguana Park Industries</name>
+		<address>
+			<street>400 South St</street>
+			<city>San Francisco</city>
+			<state>CA</state>
+			<country>USA</country>
+			<pin>91156</pin>
+		</address>
+	</account>
+</accounts>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ftp="http://www.mulesoft.org/schema/mule/ftp" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ftp http://www.mulesoft.org/schema/mule/ftp/current/mule-ftp.xsd">
+	<ftp:config name="ftp-config" doc:name="FTP Config" doc:id="096c555c-2a0a-437a-ace6-7979ecc92d68" >
+		<ftp:connection host="localhost" username="vismujum" password="sapient" workingDir="C:/configs/ftp-box/"/>
+	</ftp:config>
+	<configuration-properties doc:name="Configuration properties" doc:id="449cf5cb-a334-4454-be22-79877b7bf5df" file="configuration\config.yaml" />
+</mule>

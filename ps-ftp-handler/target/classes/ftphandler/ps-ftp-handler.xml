@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:ftp="http://www.mulesoft.org/schema/mule/ftp"
+	xmlns:ftps="http://www.mulesoft.org/schema/mule/ftps"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ftps http://www.mulesoft.org/schema/mule/ftps/current/mule-ftps.xsd
+http://www.mulesoft.org/schema/mule/ftp http://www.mulesoft.org/schema/mule/ftp/current/mule-ftp.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="ps-ftp-handlerFlow" doc:id="e7bfa6e1-780b-4db0-b6ce-587beacb8777" maxConcurrency="1">
+		<ftp:listener doc:name="On New or Updated File" doc:id="2a573ff4-64b3-4902-9eff-d96bcff6932b" config-ref="ftp-config" directory="${ftp.instreamPath}">
+			<scheduling-strategy >
+				<fixed-frequency frequency="1" timeUnit="MINUTES"/>
+			</scheduling-strategy>
+		</ftp:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="31b1c423-336b-4c71-8f23-4366dbedc161" message="#[message]"/>
+		<ftp:list doc:name="List" doc:id="ca4ba085-dda2-45aa-a008-f8914b8a1b5a" config-ref="ftp-config" directoryPath="${ftp.instreamPath}"/>
+		<foreach doc:name="For Each" doc:id="838754fc-cee6-4c05-abd9-6b9758a56d01" collection="#[message.payload]">
+			<ee:transform doc:name="File Names" doc:id="d7ed397b-0f49-4d1b-a39b-190f2c66ce64" >
+				<ee:message >
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="json-file-feed" ><![CDATA[%dw 2.0
+import * from dw::core::Strings
+output application/json
+---
+( p('ftp.outstreamPath') as String ) ++ (correlationId as String) ++ '_' ++ substringBefore( attributes.fileName ,".csv") ++ ".json"]]></ee:set-variable>
+					<ee:set-variable variableName="xml-file-feed" ><![CDATA[%dw 2.0
+import * from dw::core::Strings
+output application/json
+---
+( p('ftp.processedPath') as String ) ++ (correlationId as String) ++ '_' ++ substringBefore( attributes.fileName ,".csv") ++ ".xml"]]></ee:set-variable>
+					<ee:set-variable variableName="orig-file-feed" ><![CDATA[%dw 2.0
+output application/json
+---
+( attributes.path as String )]]></ee:set-variable>
+					<ee:set-variable variableName="archived-file-feed" ><![CDATA[%dw 2.0
+import * from dw::core::Strings
+output application/json
+---
+(correlationId as String) ++ '_' ++ ( attributes.fileName )]]></ee:set-variable>
+					<ee:set-variable variableName="inprocess-file-feed" ><![CDATA[%dw 2.0
+import * from dw::core::Strings
+output application/json
+---
+( p('ftp.inProcessPath') as String ) ++ ( attributes.fileName as String)]]></ee:set-variable>
+					<ee:set-variable variableName="orig-file-name" ><![CDATA[%dw 2.0
+output application/json
+---
+( attributes.fileName as String )]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<ee:transform doc:name="CSV to JSON" doc:id="56b4c481-cd13-43e0-ad31-eea6ce84cc76">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	name: payload01.Name,
+	address: {
+		street: payload01.BillingStreet,
+		city: payload01.BillingCity,
+		state: payload01.BillingState,
+		country: payload01.BillingCountry,
+		pin: payload01.BillingPostalCode
+	}
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<ftp:move doc:name="Original File to /inprocess" doc:id="02311479-78e6-44e4-a79e-4dd1a69c3c6a" config-ref="ftp-config" targetPath='${ftp.inProcessPath}' sourcePath='#[vars."orig-file-feed"]' overwrite="true"/>
+			<ftp:write doc:name="Write JSON File" doc:id="1e922130-6579-4efa-b81d-657c8c9244f1" config-ref="ftp-config" path='#[vars."json-file-feed"]'/>
+			<ftp:read doc:name="Read JSON File" doc:id="6f843227-c05c-4a9f-a77b-8bd246cc6402" config-ref="ftp-config" path='#[vars."json-file-feed"]'/>
+			<ee:transform doc:name="JSON to XML" doc:id="586b49ac-37a9-4887-8b0f-2d353487b1fc" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+---
+{
+	accounts: {
+		(payload map ( payload01 , indexOfPayload01 ) -> {
+			account: {
+				name: payload01.name,
+				address: {
+					street: payload01.address.street,
+					city: payload01.address.city,
+					state: payload01.address.state,
+					country: payload01.address.country,
+					pin: payload01.address.pin as Number
+				}
+			}
+		})
+	}
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<ftp:write doc:name="Write XML File" doc:id="dbec5a84-b649-49dc-b244-3bedc1cc57e4" config-ref="ftp-config" path='#[vars."xml-file-feed"]'/>
+			<ftp:copy doc:name="Copy to Archive" doc:id="e87daf93-f1ca-4258-9d73-c01f2750e372" config-ref="ftp-config" sourcePath='#[vars."inprocess-file-feed"]' targetPath='${ftp.archivePath}' renameTo='#[vars."archived-file-feed"]'/>
+			<ftp:delete doc:name="Delete" doc:id="cace5147-35cd-4957-a39c-8c5a18240d9b" config-ref="ftp-config" path="#[p('ftp.inProcessPath' as String) ++ (vars.&quot;orig-file-name&quot;)]"/>
+		</foreach>
+		<logger level="INFO" doc:name="Logger" doc:id="dfa6ec74-ba74-4b5c-b3d4-716424bb1cd5" message="#[payload]"/>
+	</flow>
+</mule>
