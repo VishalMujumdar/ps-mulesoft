@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<flow name="ps-queue-handlerFlow" doc:id="2e79b464-a48c-422d-b847-bb38d962ebc1" >
+		<http:listener doc:name="Listener" doc:id="d5a4b09c-26b0-45fc-b254-f2dbfb776181" config-ref="http-listener" path="${api-listener.uri-path}"/>
+		<ee:transform doc:name="Query Params" doc:id="f6d47cb4-254f-41bb-9b45-85a5dc99e5f4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="base" ><![CDATA[%dw 2.0
+output application/json
+---
+attributes.queryParams.base default '']]></ee:set-variable>
+				<ee:set-variable variableName="target" ><![CDATA[%dw 2.0
+output application/json
+---
+attributes.queryParams.target default '']]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="c4bcd270-86bf-41bb-9b9b-84376822a5e3" message="#[vars.target]"/>
+		<http:request method="GET" doc:name="Request" doc:id="32557907-36fd-4185-83a8-b55ae6f9dcbd" config-ref="http-requestor" path="/${api-requestor.path}">
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	symbols : vars.target,
+	base : vars.base
+}]]]></http:query-params>
+		</http:request>
+		<logger level="INFO" doc:name="Logger" doc:id="14e89d17-981e-4f2a-af99-0d8a28c6d56d" />
+		<ee:transform doc:name="Transform Message" doc:id="aaca7218-620a-4dce-b636-1790ba795fa6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var baseCCY = payload.base as String 
+var dateOfTxn = payload.date as String
+---
+payload.rates pluck(value , key) -> {
+	result: {
+		"baseCurrency" : baseCCY,
+		"targetCurrency" : key ,
+		"conversionRates": value,
+		"dateofTxn": dateOfTxn
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="df22eaa0-65f9-454c-840b-8bb5028099be" collection="payload.result">
+			<logger level="INFO" doc:name="Logger" doc:id="8819e79c-2e9f-4d47-a982-5382e63746e5" message='"Counter is : "  ++ #[vars.counter] ++ #[payload]'/>
+			<vm:publish doc:name="Publish To OutStream" doc:id="0ef3723b-2b80-43e5-b0e6-c5393a09a0a9" config-ref="vm-config" queueName="outstream"/>
+		</foreach>
+		<logger level="INFO" doc:name="Logger" doc:id="17202dfa-e75b-4b55-9d08-8abacd02016b" />
+	</flow>
+	<flow name="ps-queue-handlerFlow-v1" doc:id="2a03e548-ce53-4781-ac20-a88adb099d29" >
+		<http:listener doc:name="Listener" doc:id="41ff3f86-2f99-4f98-9a94-08e37567bc0f" config-ref="http-listener" path="${api-listener.v1-path}" />
+		<ee:transform doc:name="Query Params" doc:id="be74e432-b487-4b91-81a6-df25369d0d5b" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="base" ><![CDATA[%dw 2.0
+output application/json
+---
+attributes.queryParams.base default '']]></ee:set-variable>
+				<ee:set-variable variableName="target" ><![CDATA[%dw 2.0
+output application/json
+---
+attributes.queryParams.target default '']]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="Flow Reference" doc:id="f72a14d8-2604-41bf-9d72-f50c38c0895c" name="ps-api-handlerSub_Flow"/>
+		<logger level="INFO" doc:name="Logger" doc:id="fcddee9b-b899-47e3-92ef-2b92686259c8" message="#[payload]" />
+	</flow>
+	<sub-flow name="ps-api-handlerSub_Flow" doc:id="e3c9bf56-9401-4aac-87de-b038e2a9d673" >
+		<ee:transform doc:name="Initialize Vars" doc:id="96de9d9e-1b62-44bb-a2c7-0ac4e3c95040">
+			<ee:message />
+			<ee:variables>
+				<ee:set-variable variableName="key"><![CDATA[%dw 2.0
+output application/json
+---
+((vars.base as String) ++ "-" ++ (vars.target as String)) as String]]></ee:set-variable>
+				<ee:set-variable variableName="keyfound"><![CDATA[%dw 2.0
+output application/json
+---
+true]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<try doc:name="Try" doc:id="0b9d0a78-a22f-4834-b841-561b9c955038">
+			<os:retrieve doc:name="Retrieve From Cache" doc:id="d1301ce9-375c-4d64-ad63-0486e0ba26ed" key="#[vars.key]" />
+			<error-handler>
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="bee35cf8-2091-4c08-8dbd-b8fff172fa84" type="OS:KEY_NOT_FOUND">
+					<set-variable value="false" doc:name="Set Variable" doc:id="171e76ba-8d3d-4cdd-830b-c3b7a62771a9" variableName="keyfound" />
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<choice doc:name="Choice" doc:id="e1a9d483-2454-4337-a81b-d1d7bb87e8ff">
+			<when expression="#[!(vars.keyfound)]">
+				<logger level="INFO" doc:name="Logger" doc:id="65a07508-6ff2-486d-9f46-bfe3df22dfb8" message='"Data NOT available in Object Store - Object Store Updated"' />
+				<http:request method="GET" doc:name="HTTP Request" doc:id="92b0002a-e297-4174-9595-fd3de395642e" config-ref="http-requestor" path="/${api-requestor.path}">
+			<http:query-params><![CDATA[#[output application/java
+---
+{
+	symbols : vars.target,
+	base : vars.base
+}]]]></http:query-params>
+		</http:request>
+				<ee:transform doc:name="Transform Message" doc:id="a09c8797-bd9a-4b20-bee0-b22dd8a245d1">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+var baseCCY = payload.base as String 
+var dateOfTxn = payload.date as String
+---
+payload.rates pluck(value , key) -> {
+	result: {
+		"baseCurrency" : baseCCY,
+		"targetCurrency" : key ,
+		"conversionRates": value,
+		"dateofTxn": dateOfTxn
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+				<set-variable value="#[payload]" doc:name="API Response" doc:id="33ccb994-c51f-497e-8819-2fd5d07f01c9" variableName="api-response"/>
+				<os:store doc:name="Store" doc:id="f6a14485-d86c-4c3a-bd0a-d429be3a9e08" key="#[vars.key]">
+				</os:store>
+				<foreach doc:name="For Each" doc:id="46b4c2ac-5a43-4413-9b69-bfc56e466cda" collection="payload.result">
+					<logger level="INFO" doc:name="Logger" doc:id="0b9607c9-a596-49e1-81dc-29d74d9c5ef6" message='"Counter is : "  ++ #[vars.counter] ++ #[payload]' />
+					<ee:transform doc:name="Transform Message" doc:id="2ceb9777-98fd-42e9-b910-eb2d3835dddd">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/csv  header = false , quoteValues = true  , escape = "\&# 34;"
+---
+[{
+	baseCurrency: payload.baseCurrency,
+	targetCurrency: payload.targetCurrency,
+	conversionRates: payload.conversionRates as String,
+	dateofTxn: payload.dateofTxn
+}]]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+					<file:write doc:name="Write" doc:id="ec23ddfe-e854-47bb-b904-15c15a82dba0" config-ref="file-config" path="C:\configs\file-uploads\outbox\forex-rates.csv" mode="APPEND" />
+				</foreach>
+			</when>
+			<otherwise>
+				<logger level="INFO" doc:name="Logger" doc:id="1e87fa90-efc5-48c3-bab1-2c2edd9b980b" message='"Data available in Object Store - No Action Required"' />
+				<set-variable value="#[payload]" doc:name="API Response" doc:id="5f337b51-a819-493d-b5b1-715937bf9234" variableName="api-response" />
+			</otherwise>
+		</choice>
+	</sub-flow>
+	<flow name="ps-queue-handlerFlow-v2" doc:id="bfe31239-5f96-4f5d-bffb-637f1cdba971" >
+		<http:listener doc:name="Listener" doc:id="3c70f4d5-1ca5-4110-a165-ad53bd2734d7" config-ref="http-listener" path="${api-listener.v2-path}" />
+		<ee:transform doc:name="Query Params" doc:id="729a815b-8b91-450b-93e3-509ee5b87c48" >
+			<ee:message />
+			<ee:variables >
+				<ee:set-variable variableName="base" ><![CDATA[%dw 2.0
+output application/json
+---
+attributes.queryParams.base default '']]></ee:set-variable>
+				<ee:set-variable variableName="target" ><![CDATA[%dw 2.0
+output application/json
+---
+attributes.queryParams.target default '']]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="Flow Reference" doc:id="6db86323-1319-43c2-b77d-bdfe3caafbc9" name="ps-api-handlerSub_Flow" />
+		<logger level="INFO" doc:name="Copy_of_Logger" doc:id="24a09060-44d2-4792-9f2e-30d2e04ad2a6" message="#[payload]" />
+	</flow>
+</mule>

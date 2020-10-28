@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	
+	<vm:config name="vm-config" doc:name="VM Config" doc:id="b415c740-a176-439c-b6f7-229740436af2">
+		<vm:queues>
+			<vm:queue queueName="instream" />
+			<vm:queue queueName="outstream" />
+		</vm:queues>
+	</vm:config>
+	<http:request-config name="http-requestor" doc:name="http-request-configuration" doc:id="732a6026-0083-4996-b324-6a77b632ea8e" >
+		<http:request-connection protocol="HTTPS" host="${api-requestor.host}" port="${api-requestor.port}" />
+	</http:request-config>
+	<http:listener-config name="http-listener" doc:name="HTTP Listener config" doc:id="d604e2d4-37bc-46d0-ba7c-4ad671470d20" basePath="${api-listener.base-path}">
+		<http:listener-connection host="${api-listener.host}" port="${api-listener.port}" />
+	</http:listener-config>
+	<configuration-properties doc:name="configuration-properties" doc:id="78ea642d-4c64-4fd2-8313-1697b3d51ee9" file="configuration\config.yaml" />
+	<os:object-store name="object-store" doc:name="Object store" doc:id="3d6168db-0d65-4809-af5c-cd1f0fe32621" config-ref="objectStore-config" entryTtl="180"/>
+	<os:config name="objectStore-config" doc:name="ObjectStore Config" doc:id="821457b4-86f6-45a4-9883-95f99750bc3b" />
+	<file:config name="file-config" doc:name="File Config" doc:id="c094b17c-0d58-44ba-80e5-4203d7d2de3b" />
+</mule>

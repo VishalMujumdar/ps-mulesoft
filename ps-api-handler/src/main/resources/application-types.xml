@@ -1,0 +1,48 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="json-feed" format="json">
+      <types:shape format="weave" example="examples/json-template.json"><![CDATA[%dw 2.0
+
+type json_feed = {|
+  baseCurrency: String, 
+  targetCurrency: String, 
+  conversionRates: Number {"typeId": "double"}, 
+  dateofTxn: String
+|} {"example": "{\\\"baseCurrency\\\":\\\"EUR\\\",\\\"targetCurrency\\\":\\\"MYR\\\",\\\"conversionRates\\\":4.922,\\\"dateofTxn\\\":\\\"2020-10-26\\\"}"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="csv-feed" format="csv">
+      <types:shape format="weave" example="examples/forex-rates.csv"><![CDATA[%dw 2.0
+
+type csv_feed = Array<{|  baseCurrency: String,   targetCurrency: String,   conversionRates: String,   dateofTxn: String|}> {"isQuotedString": "false",
+"header": "true",
+"headerLineNumber": "0"}
+
+]]></types:shape>
+      <types:properties>
+        <types:property name="headerLineNumber" value="0"/>
+        <types:property name="header" value="true"/>
+        <types:property name="isQuotedString" value="false"/>
+      </types:properties>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#497ae5d3-ff9e-46db-a3e9-37bb4c72be8b">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="json-feed"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="csv-feed"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#0939cde6-a8d0-44d0-99bd-8d52fabe656c"/>
+  <types:enrichment select="#be74e432-b487-4b91-81a6-df25369d0d5b"/>
+  <types:enrichment select="#96de9d9e-1b62-44bb-a2c7-0ac4e3c95040"/>
+</types:mule>

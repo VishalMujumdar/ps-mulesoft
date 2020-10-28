@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd">
+	<flow name="ps-schedulerFlow" doc:id="c9b9bdf3-2686-45dd-a8ed-fdd5dffe13c0" initialState="stopped">
+		<scheduler doc:name="Scheduler" doc:id="076302a6-2f42-4813-9617-fca890fc1d53" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="10" timeUnit="SECONDS"/>
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="Logger" doc:id="4577fa8f-d341-4c78-8f01-a8228496f89e" message='"Job Started"'/>
+		<vm:consume queueName="instream" doc:name="Consume" doc:id="c69c1067-36b8-449c-990a-cf4a5da38b53" config-ref="vm-config" timeout="180"/>
+		<logger level="INFO" doc:name="Logger" doc:id="2fa4a616-68fb-4ff3-8469-f1d712fcc29a" />
+	</flow>
+</mule>

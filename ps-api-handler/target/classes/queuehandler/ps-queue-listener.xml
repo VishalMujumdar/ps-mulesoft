@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+	<flow name="ps-queue-listenerFlow" doc:id="949b9294-a5d8-4ba6-a0fb-351e1ef39915" >
+		<vm:listener doc:name="Listener" doc:id="3324865d-3d0b-4369-b1e3-97fbd6672269" config-ref="vm-config" queueName="outstream"/>
+		<ee:transform doc:name="Initialize Vars" doc:id="0939cde6-a8d0-44d0-99bd-8d52fabe656c" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="publishData" ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-variable>
+				<ee:set-variable variableName="key" ><![CDATA[%dw 2.0
+output application/json
+---
+((payload.baseCurrency as String) ++ "-" ++ (payload.targetCurrency as String)) as String]]></ee:set-variable>
+				<ee:set-variable variableName="keyfound" ><![CDATA[%dw 2.0
+output application/json
+---
+true]]></ee:set-variable>
+				<ee:set-variable variableName="conversionRates" ><![CDATA[%dw 2.0
+output application/json
+---
+payload.conversionRates]]></ee:set-variable>
+				<ee:set-variable variableName="router" ><![CDATA[%dw 2.0
+output application/json
+---
+false]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<try doc:name="Try" doc:id="36b8a9e5-ae07-49e1-be8f-223249805e91" >
+			<os:retrieve doc:name="Retrieve" doc:id="d179cecc-8427-4e12-b372-79408aae12a8" key="#[vars.key]" />
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="b9c2859e-1611-4b54-aadd-e807545d33d3" type="OS:KEY_NOT_FOUND">
+					<set-variable value='false' doc:name="Set Variable" doc:id="93e29815-931a-4643-b65c-c8d812296180" variableName="keyfound"/>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<choice doc:name="Choice" doc:id="fa7751da-6a90-4ded-932e-dfb15fa7e912" >
+			<when expression='#[!(vars.keyfound)]'>
+				<logger level="INFO" doc:name="Logger" doc:id="212146c9-2479-4d1d-a0ae-fd83e7d8d08c" message='"Data NOT available in Object Store - Object Store Updated"'/>
+				<os:store doc:name="Store" doc:id="61ba9865-193c-45fd-b994-c5f88ec7d82a" key="#[vars.key]">
+					<os:value ><![CDATA[#[vars.conversionRates]]]></os:value>
+				</os:store>
+				<ee:transform doc:name="Transform Message" doc:id="497ae5d3-ff9e-46db-a3e9-37bb4c72be8b">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/csv  header = false , quoteValues = true  , escape = "\&# 34;"
+---
+[{
+	baseCurrency: payload.baseCurrency,
+	targetCurrency: payload.targetCurrency,
+	conversionRates: payload.conversionRates as String,
+	dateofTxn: payload.dateofTxn
+}]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+				<file:write doc:name="Write" doc:id="9d895c67-38f8-4964-b175-903da0306358" config-ref="file-config" path="C:\configs\file-uploads\outbox\forex-rates.csv" mode="APPEND" />
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="faf6d65b-8517-40df-b725-1516cc548dca" message='"Data available in Object Store - No Action Required"'/>
+			</otherwise>
+		</choice>
+		<choice doc:name="Choice" doc:id="f9b7ca54-950d-4014-8a68-ec70133474b7" >
+			<when expression="#[vars.router]">
+				<vm:publish-consume queueName="instream" doc:name="Publish Consume to Instream" doc:id="48ce850a-3724-4515-9199-a291848cfd23" config-ref="vm-config" timeout="180">
+			<vm:content><![CDATA[#[vars.publishData]]]></vm:content>
+		</vm:publish-consume>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="495dc2a9-bfb9-48e5-b83b-9b32d7c8ab66" message='"No Action required"'/>
+			</otherwise>
+		</choice>
+	</flow>
+</mule>

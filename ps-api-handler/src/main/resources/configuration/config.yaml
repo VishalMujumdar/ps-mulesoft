@@ -1,0 +1,15 @@
+api-requestor:
+  host: "api.exchangeratesapi.io"
+  port:  "443"
+  path: "latest"
+  
+api-listener:
+  host: "0.0.0.0"
+  port: "8081"
+  base-path: "forex-api"
+  uri-path: "forex-rates"
+  v1-path: "forex-rates/v1"
+  v2-path: "forex-rates/v2"
+  
+  
+  
