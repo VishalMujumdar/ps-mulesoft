@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="03dbf88a-7bb6-449b-8bf7-47c514255f7d" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="sentry-poc" doc:id="eeeab799-04f2-405a-8a1d-76083900817d" >
+		<http:listener doc:name="Listener" doc:id="1f6af6f6-152c-4212-b207-c2cb337ce588" config-ref="HTTP_Listener_config" path="/api/v1/sentry"/>
+		<set-variable value='#[attributes.headers["Request-Id"] default correlationId]' doc:name="Request ID" doc:id="8b059254-6eb1-4b67-a486-7b3b4b4046e6" variableName="requestId" />
+		<ee:transform doc:name="Initialize Vars for Logging" doc:id="4c7a5b24-11b9-4dcd-a398-122c5144bd36" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="platform" ><![CDATA[%dw 2.0
+output application/json
+---
+"java"]]></ee:set-variable>
+				<ee:set-variable variableName="dist" ><![CDATA[%dw 2.0
+output application/json
+---
+"My-API"]]></ee:set-variable>
+				<ee:set-variable variableName="release" ><![CDATA[%dw 2.0
+output application/json
+---
+"1.0.0"]]></ee:set-variable>
+				<ee:set-variable variableName="environment" ><![CDATA[%dw 2.0
+output application/json
+---
+"DEV"]]></ee:set-variable>
+				<ee:set-variable variableName="level" ><![CDATA[%dw 2.0
+output application/json
+---
+"debug"]]></ee:set-variable>
+				<ee:set-variable variableName="logType" ><![CDATA[%dw 2.0
+output application/json
+---
+"info"]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log Start" doc:id="d4f350f7-b07b-4d0b-83c7-fa36a2d118f6" message="#[%dw 2.0
+output application/json
+
+var logMsg =   &quot;Log Start :: App Name:: &quot; ++ (app.name as String) ++ &quot;:: Flow Name ::&quot; ++ (flow.name as String) ++  &quot; :: Correlation ID :: &quot;  ++ (vars.requestId as String)
+
+---
+{
+	&quot;event_id&quot;: ((uuid() ++ uuid() ) replace '-' with '')[0 to 31]  ,
+	&quot;timestamp&quot;: (now()&gt;&gt;'EST') as String {format: &quot;yyyy-MM-dd'T'HH:mm:ss&quot;},
+	&quot;server_name&quot; :  attributes.remoteAddress,
+
+	&quot;platform&quot;: vars.platform,
+	&quot;dist&quot;: vars.dist,
+	&quot;release&quot;: vars.release,
+	&quot;environment&quot;: vars.environment,
+	&quot;level&quot; : vars.level,
+	&quot;type&quot;: vars.logType,
+	
+	&quot;message&quot; : logMsg ,
+	&quot;extra&quot;: {
+		  	    &quot;moreDetails&quot; : vars.requestId
+ 			}
+}]" category="com.sentry.log"/>
+		<set-payload value="Hello World" doc:name="Set Payload" doc:id="e81e1119-5a0a-4e0e-b8ea-91474458533d" />
+	</flow>
+</mule>
