@@ -1,0 +1,37 @@
+#%RAML 1.0
+baseUri: https://mocksvc.mulesoft.com/mocks/96582cb1-5382-4db0-9936-a2dc961447ba
+title: Forex API
+mediaType: application/json
+version: v1
+protocols:  HTTP
+description:  This API is used for determine currency conversion rates. This API will receive input parameter as base currenct and target currency.This API will invoke live feeds and determine currecny conversion for given combination on a perticular date.If target currency is not provided as input then this API will provide conversion rates of all possible currencies that are in circulation. Similarly if basline currency is not given then EURO will be used as preferred currency
+
+types:
+  forex-api-response: !include datatypes/forex-api-response.raml
+
+traits:
+  client-id-enforcable: !include traits/client-id-enforceable.raml
+  errorable: !include traits/errorable.raml
+  
+
+/currency-conversion:
+  get:
+    is: [client-id-enforcable]
+    queryParameters:
+      baseCurrency:
+        description: This is baseline currency using which forex rates will be determined
+        type: string
+        required: false
+        displayName: Base Currency
+        default: EUR
+      targetCurrency:
+        description: This is target currency for which currency conversion will be determined
+        type: string
+        required: false
+        displayName: Target Currency
+    responses:
+      200:
+        body:
+          application/json:
+            type: forex-api-response
+            example: !include examples/forex-api-response.raml

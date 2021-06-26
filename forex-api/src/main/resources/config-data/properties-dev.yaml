@@ -1,0 +1,21 @@
+# API Listener
+http:
+  host: "0.0.0.0"
+  port: "8081"
+  path: "api"
+  
+api:
+  name: "forex-api"
+  basePath: "api"
+  version: "1.0.0"
+  
+mongoDb:
+  connString: "mongodb+srv://admin:admin@conversion-rates.8turo.mongodb.net/forex-api?retryWrites=true&w=majority"
+  indexName: "doc_id"
+
+forex-api:
+  host: "api.currencylayer.com"
+  port: "80"
+  timeout: "30000"
+  path: "live"
+  access_key: "f6502e4d66b82c1d7a7492da466b85a3"

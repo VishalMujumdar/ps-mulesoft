@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:mongo="http://www.mulesoft.org/schema/mule/mongo"
+	xmlns:cluster="http://www.mulesoft.org/schema/mule/ee/cluster" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/mongo http://www.mulesoft.org/schema/mule/mongo/current/mule-mongo.xsd">
+	<configuration-properties doc:name="configuration-properties" doc:id="c3e75485-3110-427a-98ca-8162b89f7370" file="config-data/properties-${mule.env}.yaml" />
+	<http:listener-config name="http-listener" doc:name="HTTP Listener config" doc:id="d48dac5e-8f8a-45a2-b318-5ab43cc02742" >
+		<http:listener-connection host="${http.host}" port="${http.port}" />
+	</http:listener-config>
+	<http:request-config name="http-requestor" doc:name="HTTP Request configuration" doc:id="1a5f34da-c46f-4b0d-9d15-e1ec3f4d3179" >
+		<http:request-connection host="${forex-api.host}" port="${forex-api.port}" connectionIdleTimeout="${forex-api.timeout}"/>
+	</http:request-config>
+	<apikit:config outboundHeadersMapName="outboundHeadersMapName" httpStatusVarName="httpStatus" doc:name="api-router" doc:id="cdbbc286-2591-4fa0-82ea-9330e6cc44ad" name="api-router" raml="forex-api.raml" >
+		<apikit:flow-mappings >
+			<apikit:flow-mapping resource="/currency-conversion" action="get" flow-ref="get-currency-conversion" />
+		</apikit:flow-mappings>
+	</apikit:config>
+	<configuration doc:name="error-handler" doc:id="fc47dc58-9479-4b5e-b7d4-57b83b9b42d6" defaultErrorHandler-ref="error-handler" >
+	</configuration>
+	
+	
+</mule>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd">
+	<flow name="get-currency-conversion" doc:id="36083f74-e624-4657-b63c-2a665cfc15c7" >
+		<logger level="INFO" doc:name="Logger" doc:id="31f6b148-6f3e-4b10-a570-43a3ecf18cbd" message="#[payload]"/>
+		<set-variable value="#[attributes.queryParams.baseCurrency]" doc:name="Base Currency" doc:id="8f939286-0c32-4f89-8474-e065c509584e" variableName="varBaseCurrency"/>
+		<set-variable value="#[attributes.queryParams.targetCurrency]" doc:name="Target Currency" doc:id="dc63d578-0593-4c85-8d15-6913fdbceba1" variableName="varTargetCcy"/>
+		<http:request method="GET" doc:name="Request" doc:id="4cbfb3ca-f0a9-41c1-a739-4de5d69ec631" path="/live" outputMimeType="application/json" config-ref="http-requestor">
+			<ee:repeatable-file-store-stream bufferUnit="MB" />
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	access_key : "f6502e4d66b82c1d7a7492da466b85a3"
+}]]]></http:query-params>
+		</http:request>
+		<set-variable value="200" doc:name="Status Code" doc:id="204b6302-8ce0-4f21-9d49-8c69a1e648a2" variableName="statusCode"/>
+	</flow>
+</mule>

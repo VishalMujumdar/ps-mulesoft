@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:xml-module="http://www.mulesoft.org/schema/mule/xml-module"
+	 xmlns="http://www.mulesoft.org/schema/mule/core" 
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+	http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd">
+	
+	<error-handler name="error-handler" doc:id="0e18626e-0dbe-47b8-ba0b-dd828819d4b4">
+		<on-error-continue enableNotifications="true" logException="true" doc:name="http-404" doc:id="8958d055-4922-48b8-a99b-daf5246c139e" type="APIKIT:NOT_FOUND">
+			<set-variable value="404" doc:name="Status Code" doc:id="acdbf728-c146-4bd4-b178-4504d915a7c4" variableName="statusCode"/>
+			<set-payload doc:name="Set Payload" doc:id="83ffe0a5-adfe-4872-8dad-171ff6b0226e" mimeType="application/json" value='#["{ message :  Resource Not found }"]'/>
+		
+</on-error-continue>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="http-405" doc:id="e61b2140-b6de-419c-8d83-8de7ee13873f" type="APIKIT:METHOD_NOT_ALLOWED">
+			<set-variable value="405" doc:name="Status Code" doc:id="aa04485b-1ffb-48f9-9f76-de93b508b9f1" variableName="statusCode"/>
+			<set-payload value='#["{ message :  Method Not allowed }"]' doc:name="Set Payload" doc:id="7527a2ce-eb18-44bf-8cde-87d8e48c41df" />
+		
+</on-error-continue>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="http-415" doc:id="d9a30ff7-c376-4ea0-a58b-db958b21024e" type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+			<set-variable value="415" doc:name="Status Code" doc:id="a5bfbad5-ae08-461f-b46e-8344706ddf0b" variableName="statusCode"/>
+			<set-payload value='"{ message :  Unsupported media type as part of header parameters }"' doc:name="Set Payload" doc:id="819284cc-2fd0-48ac-a5cd-9851f8452548" />
+		
+</on-error-continue>
+			<on-error-continue enableNotifications="true" logException="true" doc:name="http-406" doc:id="f1833df5-3e00-4465-83c0-8e8101158475" type="APIKIT:NOT_ACCEPTABLE">
+			<set-variable value="415" doc:name="Status Code" doc:id="10d36bce-5df1-4d9d-a8b6-94326bb41709" variableName="statusCode"/>
+			<set-payload value='"{ message :  Accepted data type provided at header is not valid. }"' doc:name="Set Payload" doc:id="f5077076-a6d2-41cc-8872-40e6d25a7387" />
+		
+</on-error-continue>
+					<on-error-continue enableNotifications="true" logException="true" doc:name="http-400" doc:id="cc26dd0b-ff50-4489-8716-6a1e93f2c0c4" type="APIKIT:BAD_REQUEST">
+			<set-variable value="415" doc:name="Status Code" doc:id="4fef9298-9d80-4763-a36e-d629f4daf00e" variableName="statusCode"/>
+			<set-payload value='"{ message :  Invalid input data received as part of input request. }"' doc:name="Set Payload" doc:id="adb12894-593b-4425-9135-23e10c1d797e" />
+		
+</on-error-continue>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="http-503" doc:id="27b2c445-638a-4226-913b-a476b8173b98" type="HTTP:CONNECTIVITY,HTTP:BAD_REQUEST,HTTP:SERVICE_UNAVAILABLE,HTTP:NOT_ACCEPTABLE,HTTP:NOT_FOUND">
+			<set-variable value="503" doc:name="Status Code" doc:id="655a0406-bed0-4dd6-aa54-8e677bf113e4" variableName="statusCode"/>
+			<set-payload value='"{ message :  Down stream service is not available , check connection parameters to connect with downstream service.}"' doc:name="Set Payload" doc:id="c48998ab-ff18-4423-adc8-805d95610f31" />
+		
+</on-error-continue>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="http-500" doc:id="80e5e775-494c-42ec-8018-f076520ca94f" type="ANY">
+			<logger level="INFO" doc:name="Logger" doc:id="fa9ccddc-72ac-423a-8603-85e07a7fcbe9" />
+			<set-variable value="500" doc:name="Status Code" doc:id="f4d13cdf-bfb4-4fd6-b066-4a4baa3214cc" variableName="statusCode"/>
+			<set-payload value='"{ message :  Internal server error.}"' doc:name="Set Payload" doc:id="1948b826-5b78-4b6a-af74-fc492b592e89" />
+		
+</on-error-continue>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="http-408" doc:id="8f8f1995-f03b-4d80-8a55-293e573f35fb" type="HTTP:TIMEOUT">
+			<set-variable value="408" doc:name="Status Code" doc:id="3ce64443-7083-472b-b495-4141c9aab00e" variableName="statusCode"/>
+			<set-payload value='"{ message :  Time out exception received while invoking downstream service.}"' doc:name="Set Payload" doc:id="8dfea3ae-7f49-4209-99d3-2cbcbf8c4460" />
+		
+</on-error-continue>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="c4be3414-7b31-40eb-831b-81c3151262ae" type="ANY">
+			<set-variable value="500" doc:name="Status Code" doc:id="3b149cc5-9368-4ed5-b994-dc0194a0aa35" variableName="statusCode"/>
+			<set-payload value='"{ message :  Internal Server Error.}"' doc:name="Set Payload" doc:id="b0958734-5bb2-428b-8e08-751e6013a485" />
+		
+</on-error-continue>
+	</error-handler>
+</mule>

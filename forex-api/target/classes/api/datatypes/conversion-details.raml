@@ -1,0 +1,24 @@
+#%RAML 1.0 DataType
+
+type: object
+properties:
+    baseCurrency:
+      type: string
+      description: Baseline currency or reference currency
+      required: false
+      displayName: Baseline Currency
+    targetCurrency:
+      displayName: Target Currency
+      description: Target currency for which all conversions are done
+      required: false
+      type: string
+    conversionRates:
+      description: Conversion rates for reference currency to target currency
+      displayName: Conversion Rates
+      type: number
+      required: true
+    date:
+      description: Date time at which conversion rates had been provided
+      displayName: Conversion Date
+      type: string
+      required: true

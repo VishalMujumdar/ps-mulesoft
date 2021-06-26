@@ -1,0 +1,141 @@
+#%RAML 1.0 Trait
+
+description: Common error responses returned by an API
+usage: Apply to all operations
+
+responses:
+  400:
+    description: Bad request
+    body:
+      application/json:
+        type: !include ../datatypes/error.raml
+        example: |
+          {
+            "status": 
+              {
+                "code": "100400",
+                "type": "FAILURE",
+                "description": "Meaningful Error Description"
+              }
+            
+          }
+  401:
+    description: Unauthorised request
+    body:
+      application/json:
+        type: !include ../datatypes/error.raml
+        example: |
+          {
+            "status": 
+              {
+                "code": "100401",
+                "type": "FAILURE",
+                "description": "Some Error Description"
+              }
+            
+          }
+  403:
+    description: Forbidden
+    body:
+      application/json:
+        type: !include ../datatypes/error.raml
+        example: |
+          {
+            "status": 
+              {
+                "code": "100403",
+                "type": "FAILURE",
+                "description": "You are not authorized to use this interface. Please contact IT support to request access"
+              }
+            
+          }
+  404:
+    description: Resource not found
+    body:
+      application/json:
+        type: !include ../datatypes/error.raml
+        example: |
+          {
+            "status": 
+              {
+                "code": "100404",
+                "type": "FAILURE",
+                "description": "There was no matching record found"
+              }
+            
+          }
+  405:
+    description: Method not allowed
+    body:
+      application/json:
+        type: !include ../datatypes/error.raml
+        example: |
+          {
+            "status": 
+              {
+                "code": "100405",
+                "type": "FAILURE",
+                "description": "Some Error Description"
+              }
+            
+          }
+  406:
+    description: Not acceptable
+    body:
+      application/json:
+        type: !include ../datatypes/error.raml
+        example: |
+          {
+            "status": 
+              {
+                "code": "100406",
+                "type": "FAILURE",
+                "description": "Some Error Description"
+              }
+            
+          }
+  415:
+    description: Unsupported media type
+    body:
+      application/json:
+        type: !include ../datatypes/error.raml
+        example: |
+          {
+            "status": 
+              {
+                "code": "100415",
+                "type": "FAILURE",
+                "description": "Some Error Description"
+              }
+            
+          }
+  500:
+    description: Server error
+    body:
+      application/json:
+        type: !include ../datatypes/error.raml
+        example: |
+          {
+            "status": 
+              {
+                "code": "100500",
+                "type": "FAILURE",
+                "description": "Some Error Description"
+              }
+            
+          }
+  502:
+    description: Bad gateway
+    body:
+      application/json:
+        type: !include ../datatypes/error.raml
+        example: |
+          {
+            "status": 
+              {
+                "code": "100502",
+                "type": "FAILURE",
+                "description": "Some Error Description"
+              }
+            
+          }

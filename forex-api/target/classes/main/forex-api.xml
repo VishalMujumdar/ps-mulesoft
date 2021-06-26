@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd">
+	
+	<flow name="ms-forex-apiFlow" doc:id="36083f74-e624-4657-b63c-2a665cfc15c7" >
+		<http:listener doc:name="Listener" doc:id="70e4155c-4298-4481-9127-1402a035feea" path="/api/*" config-ref="http-listener">
+			<http:response statusCode="#[vars.statusCode]" />
+			<http:error-response statusCode="#[vars.statusCode]" />
+		</http:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="31f6b148-6f3e-4b10-a570-43a3ecf18cbd" message="#[payload]"/>
+		<apikit:router doc:name="APIkit Router" doc:id="ae460189-8a88-4704-8541-9a369071f696" config-ref="api-router"/>
+	</flow>
+</mule>
